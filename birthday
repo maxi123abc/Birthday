@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Birthday Network</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111827;
+      color: white;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    input, textarea, button {
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      background: #4f46e5;
+      color: white;
+      cursor: pointer;
+    }
+
+    .entry {
+      background: #1f2937;
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+    }
+
+    .small {
+      opacity: 0.7;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <h1>🎂 Birthday Network</h1>
+
+  <form id="birthdayForm">
+
+    <input
+      type="text"
+      id="name"
+      placeholder="Benutzername"
+      required
+    >
+
+    <input
+      type="date"
+      id="birthday"
+      required
+    >
+
+    <input
+      type="text"
+      id="platform"
+      placeholder="Discord / Instagram / etc."
+    >
+
+    <textarea
+      id="comment"
+      placeholder="Kommentar"
+    ></textarea>
+
+    <button type="submit">
+      Eintragen
+    </button>
+
+  </form>
+
+  <div id="entries"></div>
+
+</div>
+
+<script>
+
+const form = document.getElementById("birthdayForm");
+const entriesDiv = document.getElementById("entries");
+
+let entries = JSON.parse(localStorage.getItem("birthdayEntries")) || [];
+
+function saveEntries() {
+  localStorage.setItem("birthdayEntries", JSON.stringify(entries));
+}
+
+function renderEntries() {
+
+  entriesDiv.innerHTML = "";
+
+  entries.forEach((entry, index) => {
+
+    entriesDiv.innerHTML += `
+
+      <div class="entry">
+
+        <h3>${entry.name}</h3>
+
+        <p>🎂 ${entry.birthday}</p>
+
+        <p>🌐 ${entry.platform}</p>
+
+        <p>${entry.comment}</p>
+
+        <p class="small">
+          ✅ Letzte Bestätigung:
+          ${entry.confirmed || "Nie"}
+        </p>
+
+        <button onclick="confirmUser(${index})">
+          Noch aktiv
+        </button>
+
+      </div>
+
+    `;
+  });
+}
+
+function confirmUser(index) {
+
+  entries[index].confirmed =
+    new Date().toLocaleDateString("de-DE");
+
+  saveEntries();
+
+  renderEntries();
+}
+
+form.addEventListener("submit", function(e) {
+
+  e.preventDefault();
+
+  const newEntry = {
+
+    name: document.getElementById("name").value,
+
+    birthday: document.getElementById("birthday").value,
+
+    platform: document.getElementById("platform").value,
+
+    comment: document.getElementById("comment").value,
+
+    confirmed: new Date().toLocaleDateString("de-DE")
+  };
+
+  entries.push(newEntry);
+
+  saveEntries();
+
+  renderEntries();
+
+  form.reset();
+});
+
+renderEntries();
+
+</script>
+
+</body>
+</html>
