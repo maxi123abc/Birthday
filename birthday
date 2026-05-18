@@ -2,184 +2,81 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Birthday Network</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #111827;
-      color: white;
-      margin: 0;
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 700px;
-      margin: auto;
-    }
-
-    h1 {
-      text-align: center;
-    }
-
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 30px;
-    }
-
-    input, textarea, button {
-      padding: 12px;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
-    }
-
-    button {
-      background: #4f46e5;
-      color: white;
-      cursor: pointer;
-    }
-
-    .entry {
-      background: #1f2937;
-      padding: 15px;
-      border-radius: 12px;
-      margin-bottom: 15px;
-    }
-
-    .small {
-      opacity: 0.7;
-      font-size: 14px;
-    }
+    body { font-family: Arial; background:#0f172a; color:white; padding:20px; }
+    .container { max-width:700px; margin:auto; }
+    input, textarea, button { width:100%; margin:5px 0; padding:10px; border-radius:8px; border:none; }
+    button { background:#4f46e5; color:white; cursor:pointer; }
+    .entry { background:#1e293b; padding:15px; margin-top:10px; border-radius:10px; }
   </style>
 </head>
-<body>
 
+<body>
 <div class="container">
 
   <h1>🎂 Birthday Network</h1>
 
-  <form id="birthdayForm">
-
-    <input
-      type="text"
-      id="name"
-      placeholder="Benutzername"
-      required
-    >
-
-    <input
-      type="date"
-      id="birthday"
-      required
-    >
-
-    <input
-      type="text"
-      id="platform"
-      placeholder="Discord / Instagram / etc."
-    >
-
-    <textarea
-      id="comment"
-      placeholder="Kommentar"
-    ></textarea>
-
-    <button type="submit">
-      Eintragen
-    </button>
-
+  <form id="form">
+    <input id="name" placeholder="Name" required>
+    <input id="birthday" type="date" required>
+    <input id="platform" placeholder="Plattform">
+    <textarea id="comment" placeholder="Kommentar"></textarea>
+    <button type="submit">Speichern</button>
   </form>
 
-  <div id="entries"></div>
+  <div id="list"></div>
 
 </div>
 
-<script>
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-const form = document.getElementById("birthdayForm");
-const entriesDiv = document.getElementById("entries");
+const SUPABASE_URL = "https://hguiwubwzdhnbbvzacxq.supabase.co";
+const SUPABASE_KEY = "sb_publishable_9Yfi0L2etWp5HpXHUEMsCA_ZX7lriPq";
 
-let entries = JSON.parse(localStorage.getItem("birthdayEntries")) || [];
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-function saveEntries() {
-  localStorage.setItem("birthdayEntries", JSON.stringify(entries));
-}
+const form = document.getElementById("form");
+const list = document.getElementById("list");
 
-function renderEntries() {
+async function load() {
+  const { data } = await supabase
+    .from("birthdays")
+    .select("*")
+    .order("birthday", { ascending: true });
 
-  entriesDiv.innerHTML = "";
+  list.innerHTML = "";
 
-  entries.forEach((entry, index) => {
-
-    entriesDiv.innerHTML += `
-
+  data.forEach(e => {
+    list.innerHTML += `
       <div class="entry">
-
-        <h3>${entry.name}</h3>
-
-        <p>🎂 ${entry.birthday}</p>
-
-        <p>🌐 ${entry.platform}</p>
-
-        <p>${entry.comment}</p>
-
-        <p class="small">
-          ✅ Letzte Bestätigung:
-          ${entry.confirmed || "Nie"}
-        </p>
-
-        <button onclick="confirmUser(${index})">
-          Noch aktiv
-        </button>
-
+        <b>${e.name}</b><br>
+        🎂 ${e.birthday}<br>
+        🌐 ${e.platform}<br>
+        📝 ${e.comment}
       </div>
-
     `;
   });
 }
 
-function confirmUser(index) {
-
-  entries[index].confirmed =
-    new Date().toLocaleDateString("de-DE");
-
-  saveEntries();
-
-  renderEntries();
-}
-
-form.addEventListener("submit", function(e) {
-
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const newEntry = {
-
-    name: document.getElementById("name").value,
-
-    birthday: document.getElementById("birthday").value,
-
-    platform: document.getElementById("platform").value,
-
-    comment: document.getElementById("comment").value,
-
-    confirmed: new Date().toLocaleDateString("de-DE")
-  };
-
-  entries.push(newEntry);
-
-  saveEntries();
-
-  renderEntries();
+  await supabase.from("birthdays").insert([{
+    name: name.value,
+    birthday: birthday.value,
+    platform: platform.value,
+    comment: comment.value
+  }]);
 
   form.reset();
+  load();
 });
 
-renderEntries();
-
+load();
 </script>
 
 </body>
